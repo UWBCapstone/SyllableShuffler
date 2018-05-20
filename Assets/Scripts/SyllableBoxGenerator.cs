@@ -36,6 +36,10 @@ namespace SyllableShifter.Scripts
             go.transform.localScale = new Vector3(xScale, yScale, go.transform.localScale.z);
             goText.characterSize = textScale;
 
+            // Register information for the syllable plane script
+            var plane = go.GetComponentInChildren<SyllablePlane>();
+            plane.Register(syllable, plane.gameObject);
+
             if (!keepInvisible)
             {
                 go.SetActive(true);

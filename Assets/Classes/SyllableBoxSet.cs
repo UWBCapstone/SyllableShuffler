@@ -11,6 +11,7 @@ namespace SyllableShifter
         #region Fields
         private Word word_m;
         private Syllable[] shuffledSyllables_m;
+        public List<SyllableBox> Boxes;
         #endregion
 
         #region Methods
@@ -19,6 +20,7 @@ namespace SyllableShifter
         {
             bool shuffle = true;
             SetWord(word, shuffle);
+            Boxes = GenerateBoxes(word);
         }
         #endregion
         
@@ -83,9 +85,102 @@ namespace SyllableShifter
                 }
             }
         }
-        #endregion
 
-        #region Properties
+        public List<SyllableBox> GenerateBoxes(Word word)
+        {
+            List<SyllableBox> boxes = new List<SyllableBox>();
+
+            // Grab the Vuforia objects we're going to be associating with the boxes
+            List<KeyValuePair<int, GameObject>> vuforiaParentPairs = GrabVuforiaObjects(word.SyllableCount);
+            //List<GameObject> vuforiaParents = GrabVuforiaObjects(word.SyllableCount);
+
+            // Generate the box script, which generates the box object and attaches the necessary scripts
+            for(int i = 0; i < word.SyllableCount; i++)
+            {
+                SyllableBox box = new SyllableBox(word[i], vuforiaParentPairs[i].Value);
+                boxes.Add(box);
+                Debug.Log("SyllableBoxSet: Generating box for Vuforia ID pattern " + vuforiaParentPairs[i].Key);
+            }
+
+            return boxes;
+        }
+
+        public List<KeyValuePair<int, GameObject>> GrabVuforiaObjects(int count)
+        {
+            if (count <= VuforiaPool.NumAvailable)
+            {
+                List<KeyValuePair<int, GameObject>> objs = new List<KeyValuePair<int, GameObject>>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    int index;
+                    GameObject go = VuforiaPool.PullNext(out index);
+
+                    KeyValuePair<int, GameObject> pair = new KeyValuePair<int, GameObject>(index, go);
+
+                    objs.Add(pair);
+                }
+
+                return objs;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach(var box in Boxes)
+            {
+                // free vuforia object
+                // trigger vuforia pool disconnect
+                // destroy the objects
+                box.Dispose();
+            }
+
+            // Clean up any unchecked syllable planes
+            cleanFloatingAssociatedSyllablePlanes();
+        }
+
+        private void cleanFloatingAssociatedSyllablePlanes()
+        {
+            // Search for any syllable plane objects that have no parent, and if their name matches up, destroy the syllable plane object
+            var syllablePlaneScripts = GameObject.FindObjectsOfType<SyllablePlane>();
+            foreach (var sps in syllablePlaneScripts)
+            {
+                var go = sps.gameObject;
+                if(go.transform.parent != null)
+                {
+                    continue;
+                }
+                else
+                {
+                    bool matchedSyllable = false;
+
+                    foreach(var s in shuffledSyllables_m)
+                    {
+                        if (s.Matches(sps.Syllable))
+                        {
+                            matchedSyllable = true;
+                            break;
+                        }
+                    }
+
+                    if (matchedSyllable)
+                    {
+#if UNITY_EDITOR
+                        GameObject.DestroyImmediate(go);
+#else
+                        GameObject.Destroy(go);
+#endif
+                    }
+                }
+            }
+        }
+#endregion
+
+#region Properties
         public Word Word
         {
             get
@@ -100,6 +195,6 @@ namespace SyllableShifter
                 return new List<Syllable>(shuffledSyllables_m);
             }
         }
-        #endregion
+#endregion
     }
 }

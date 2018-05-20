@@ -9,6 +9,7 @@ namespace SyllableShifter
         #region Fields
         private Syllable syllable_m;
         private GameObject boxObj_m;
+        private GameObject vuforiaPlane_m;
 
         //private static Mesh cachedMesh_m;
         #endregion
@@ -37,12 +38,37 @@ namespace SyllableShifter
         public SyllableBox()
         {
             syllable_m = new Syllable();
+            vuforiaPlane_m = null;
             boxObj_m = initBox(syllable_m);
         }
 
-        public SyllableBox(Syllable syllable)
+        public SyllableBox(Syllable syllable, GameObject parentVuforiaPlane)
         {
+            vuforiaPlane_m = parentVuforiaPlane;
             boxObj_m = initBox(syllable_m);
+        }
+
+        public Syllable PullSyllable()
+        {
+            if(!Empty)
+            {
+                Syllable s = new Syllable(syllable_m.Text);
+                syllable_m = null;
+                return s;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public bool PushSyllable(Syllable syllable)
+        {
+            // if(Empty)...
+            Syllable = new Syllable(syllable.Text);
+            return true;
+            // else
+            // return false;
         }
 
         private GameObject initBox(string syllable = "")
@@ -50,6 +76,20 @@ namespace SyllableShifter
             bool keepInvisible = true;
             string name = GetBoxName(syllable);
             var boxGO = SyllableShifter.Scripts.SyllableBoxGenerator.Instantiate(name, new Syllable(syllable), keepInvisible);
+            var sbp = boxGO.AddComponent<SyllableBoxPointer>();
+            sbp.SetBox(this);
+
+            // Set vuforia parent
+            // The vuforia parent will never change
+            if (vuforiaPlane_m != null)
+            {
+                boxGO.transform.parent = vuforiaPlane_m.transform;
+            }
+            else
+            {
+                Debug.LogError("Vuforia plane not set for SyllableBox with syllable " + syllable);
+            }
+
             return boxGO;
         }
 
@@ -70,10 +110,25 @@ namespace SyllableShifter
             return Vector3.Dot(otherRight, vec) < 0;
         }
         #endregion
-        #endregion
+
+        public void Dispose()
+        {
+            if(boxObj_m != null
+                && vuforiaPlane_m != null)
+            {
+                boxObj_m.transform.parent = null; // disconnect from vuforia parent
+                VuforiaPool.Release(vuforiaPlane_m);
+#if UNITY_EDITOR
+                GameObject.DestroyImmediate(boxObj_m);
+#else
+                GameObject.Destroy(boxObj_m);
+#endif
+            }
+        }
+#endregion
 
 
-        #region Properties
+#region Properties
         public Syllable Syllable
         {
             get
@@ -106,6 +161,20 @@ namespace SyllableShifter
                 }
             }
         }
-        #endregion
+        public bool Empty
+        {
+            get
+            {
+                return syllable_m == null;
+            }
+        }
+        public GameObject VuforiaParent
+        {
+            get
+            {
+                return vuforiaPlane_m;
+            }
+        }
+#endregion
     }
 }

@@ -22,11 +22,23 @@ namespace SyllableShifter
             syllables_m.AddRange(syllables);
         }
 
+        public Word(IEnumerable<string> syllables)
+        {
+            initializeVariables();
+            foreach(string syllable in syllables)
+            {
+                Syllable s = new Syllable(syllable);
+                syllables_m.Add(s);
+            }
+        }
+
         public void Set(IEnumerable<Syllable> syllables)
         {
             syllables_m.Clear();
             syllables_m.AddRange(syllables);
         }
+
+
 
         public bool Matches(string word)
         {
