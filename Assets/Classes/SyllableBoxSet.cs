@@ -26,11 +26,15 @@ namespace SyllableShifter
         
         public Syllable[] ShuffleSyllables(Syllable[] syllablesToShuffle)
         {
-            if(shuffledSyllables_m != null)
+            if(syllablesToShuffle != null)
             {
-                List<Syllable> temp = new List<Syllable>(shuffledSyllables_m);
+                List<Syllable> temp = new List<Syllable>();
                 var rnd = new System.Random();
-                temp.OrderBy(item => rnd.Next());
+                //temp.OrderBy(item => rnd.Next());
+                for (int i = 0; i < syllablesToShuffle.Length; i++)
+                {
+                    temp.Add(syllablesToShuffle[rnd.Next(syllablesToShuffle.Length - temp.Count)]);
+                }
                 return temp.ToArray();
             }
             else
@@ -94,12 +98,20 @@ namespace SyllableShifter
             List<KeyValuePair<int, GameObject>> vuforiaParentPairs = GrabVuforiaObjects(word.SyllableCount);
             //List<GameObject> vuforiaParents = GrabVuforiaObjects(word.SyllableCount);
 
-            // Generate the box script, which generates the box object and attaches the necessary scripts
-            for(int i = 0; i < word.SyllableCount; i++)
+            if (vuforiaParentPairs == null
+                || vuforiaParentPairs.Count < Word.SyllableCount)
             {
-                SyllableBox box = new SyllableBox(word[i], vuforiaParentPairs[i].Value);
-                boxes.Add(box);
-                Debug.Log("SyllableBoxSet: Generating box for Vuforia ID pattern " + vuforiaParentPairs[i].Key);
+                Debug.LogError("SyllableBoxSet: Insufficient Vuforia planar images associated in project to generate necessary boxes. Please make the Vuforia target images and set them in the scene and ensure that there are a necessary quantity to instantiate these boxes.");
+            }
+            else
+            {
+                // Generate the box script, which generates the box object and attaches the necessary scripts
+                for (int i = 0; i < word.SyllableCount; i++)
+                {
+                    SyllableBox box = new SyllableBox(word[i], vuforiaParentPairs[i].Value);
+                    boxes.Add(box);
+                    Debug.Log("SyllableBoxSet: Generating box for Vuforia ID pattern " + vuforiaParentPairs[i].Key);
+                }
             }
 
             return boxes;

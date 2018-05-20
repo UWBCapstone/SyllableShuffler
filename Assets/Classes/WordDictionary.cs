@@ -88,6 +88,8 @@ namespace SyllableShifter
             {
                 for(int i = 0; i < strings.Length; i++)
                 {
+                    //List<Syllable> syllables = new List<Syllable>(words[i].Syllables);
+                    //Add(strings[i].ToLower(), syllables);
                     Add(strings[i].ToLower(), words[i].Syllables);
                 }
             }

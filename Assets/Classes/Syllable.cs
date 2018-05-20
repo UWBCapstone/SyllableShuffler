@@ -21,7 +21,7 @@ namespace SyllableShifter
 
         public Syllable(string text)
         {
-            if (string.IsNullOrEmpty(text))
+            if (!string.IsNullOrEmpty(text))
             {
                 text_m = text;
                 length_m = (uint)text.Length;
@@ -31,6 +31,10 @@ namespace SyllableShifter
                 text_m = defaultText_m;
                 length_m = 0;
             }
+        }
+
+        public Syllable(Syllable other) : this(other.Text)
+        {
         }
 
         public bool Matches(Syllable other)

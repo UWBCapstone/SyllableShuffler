@@ -32,6 +32,10 @@ namespace SyllableShifter
             }
         }
 
+        public Word(Word other) : this(other.Syllables)
+        {
+        }
+
         public void Set(IEnumerable<Syllable> syllables)
         {
             syllables_m.Clear();
