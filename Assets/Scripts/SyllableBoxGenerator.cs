@@ -24,17 +24,20 @@ namespace SyllableShifter.Scripts
             goText.text = syllable.Text;
 
             // Calculate scales for appropriate text display
-            float textScale = goText.text.Length / 5.0f;
-            float xScale = (textScale > 0.2f) ? textScale / 0.2f : 1;
-            float yScale = (xScale > 3.0f) ? xScale / 3 : 1;
+            float textScale = goText.characterSize;
+            float maxXScale = 1.5f;
+
+            float totalCharacterSpace = goText.text.Length / 5.0f;
+            float xScale = (totalCharacterSpace > textScale * 5) ? totalCharacterSpace / (textScale * 5) : 1; // Assumes five characters can comfortably fit within the space originally granted
+            float yScale = (xScale > maxXScale) ? xScale / maxXScale : 1;
             if(yScale > 1)
             {
-                xScale /= yScale;
+                xScale = (int)((xScale / yScale) + 1) * maxXScale;
             }
 
             // Set scales
             go.transform.localScale = new Vector3(xScale, yScale, go.transform.localScale.z);
-            goText.characterSize = textScale;
+            //goText.characterSize = totalCharacterSpace;
 
             // Register information for the syllable plane script
             var plane = go.GetComponentInChildren<SyllablePlane>();

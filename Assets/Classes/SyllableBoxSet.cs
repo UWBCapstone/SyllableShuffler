@@ -21,19 +21,25 @@ namespace SyllableShifter
             bool shuffle = true;
             SetWord(word, shuffle);
             Boxes = GenerateBoxes(word);
+            SetSyllables(new List<Syllable>(shuffledSyllables_m)); // Set in the syllables you shuffled around
         }
         #endregion
         
         public Syllable[] ShuffleSyllables(Syllable[] syllablesToShuffle)
         {
-            if(syllablesToShuffle != null)
+            if(syllablesToShuffle != null
+                && syllablesToShuffle.Length > 0)
             {
+                List<Syllable> copy = new List<Syllable>(syllablesToShuffle);
                 List<Syllable> temp = new List<Syllable>();
                 var rnd = new System.Random();
-                //temp.OrderBy(item => rnd.Next());
-                for (int i = 0; i < syllablesToShuffle.Length; i++)
+                //temp = new List<Syllable>(temp.OrderBy(item => rnd.Next()));
+                int numItems = copy.Count;
+                for (int i = 0; i < numItems; i++)
                 {
-                    temp.Add(syllablesToShuffle[rnd.Next(syllablesToShuffle.Length - temp.Count)]);
+                    int index = rnd.Next(copy.Count);
+                    temp.Add(copy[index]);
+                    copy.Remove(copy[index]);
                 }
                 return temp.ToArray();
             }
@@ -87,6 +93,16 @@ namespace SyllableShifter
                         shuffledSyllables_m = ShuffleSyllables(shuffledSyllables_m);
                     }
                 }
+            }
+        }
+
+        public void SetSyllables(List<Syllable> syllables)
+        {
+            for(int i = 0; i < Boxes.Count; i++)
+            {
+                var box = Boxes[i];
+                box.PullSyllable();
+                box.PushSyllable(syllables[i]);
             }
         }
 
@@ -155,6 +171,14 @@ namespace SyllableShifter
             cleanFloatingAssociatedSyllablePlanes();
         }
 
+        public void SetColor(Color color)
+        {
+            foreach(var box in Boxes)
+            {
+                box.SetBoxColor(color);
+            }
+        }
+
         private void cleanFloatingAssociatedSyllablePlanes()
         {
             // Search for any syllable plane objects that have no parent, and if their name matches up, destroy the syllable plane object
@@ -205,6 +229,27 @@ namespace SyllableShifter
             get
             {
                 return new List<Syllable>(shuffledSyllables_m);
+            }
+        }
+        public int Count
+        {
+            get
+            {
+                return Boxes.Count;
+            }
+        }
+        public SyllableBox this[int index]
+        {
+            get
+            {
+                if (index < Count)
+                {
+                    return Boxes[index];
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 #endregion

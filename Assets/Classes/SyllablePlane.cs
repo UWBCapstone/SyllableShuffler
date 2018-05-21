@@ -26,6 +26,11 @@ namespace SyllableShifter
             //associatedBox_m = associatedBox;
         }
 
+        public void SetSyllable(Syllable syllable)
+        {
+            syllable_m = syllable;
+        }
+
         public GameObject Uncouple()
         {
             if(plane_m != null)

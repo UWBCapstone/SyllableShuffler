@@ -52,6 +52,14 @@ namespace SyllableShifter
                 set.Dispose();
             }
         }
+
+        public List<SyllableBoxSet> BoxSets
+        {
+            get
+            {
+                return boxSets_m;
+            }
+        }
         #endregion
     }
 }

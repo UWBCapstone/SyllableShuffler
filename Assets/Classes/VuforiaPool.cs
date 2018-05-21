@@ -47,7 +47,8 @@ namespace SyllableShifter
             if(available_m.Count > 0)
             {
                 List<KeyValuePair<int, GameObject>> temp = available_m.ToList<KeyValuePair<int, GameObject>>();
-                temp.OrderBy(x => x.Key);
+                var temp2 = temp.OrderBy(x => x.Key);
+                temp = new List<KeyValuePair<int, GameObject>>(temp2);
 
                 if(temp.Count > 0)
                 {
@@ -83,14 +84,16 @@ namespace SyllableShifter
 
         public static void GatherVuforiaObjectsFromScene()
         {
-            int index = 0;
-
             // Search for and grab all GameObjects that have the 
             var allGOs = GameObject.FindObjectsOfType<GameObject>();
             foreach(var go in allGOs)
             {
                 if (go.name.Contains(VuforiaNameKey))
                 {
+                    // Gather the index of the Vuforia object from its name
+                    string[] nameComponents = go.name.Split(new char[1] { '_' });
+                    int index = int.Parse(nameComponents[nameComponents.Length - 1]);
+
                     pool_m.Add(go, index);
                     available_m.Add(index, go);
 

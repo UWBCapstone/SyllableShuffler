@@ -8,6 +8,7 @@ namespace SyllableShifter
     {
         #region Fields
         private GameObject trackedPlane_m;
+        private float trackedDistance_m = 0.0f;
         public SyllableBox BoxHoveredOver;
         public bool CanDrop = false;
         #endregion
@@ -21,6 +22,7 @@ namespace SyllableShifter
                 GameObject planeGO = box.Box.GetComponentInChildren<SyllablePlane>().gameObject;
                 var planeScript = planeGO.GetComponent<SyllablePlane>();
                 planeScript.Uncouple();
+                box.PullSyllable();
 
                 return planeGO;
             }
@@ -41,12 +43,14 @@ namespace SyllableShifter
             else
             {
                 Push(trackedPlane_m, BoxHoveredOver);
+                trackedPlane_m = null;
             }
+            trackedDistance_m = 0.0f;
         }
 
         public void StartHold(Vector2 fingerScreenSpace)
         {
-            Vector3 worldFingerPos = Camera.main.ViewportToScreenPoint(new Vector3(fingerScreenSpace.x, fingerScreenSpace.y, Camera.main.nearClipPlane));
+            Vector3 worldFingerPos = Camera.main.ScreenToWorldPoint(new Vector3(fingerScreenSpace.x, fingerScreenSpace.y, Camera.main.nearClipPlane));
             StartHold(worldFingerPos);
         }
 
@@ -54,26 +58,35 @@ namespace SyllableShifter
         {
             // Raycast to a box and see if it has a syllable associated, if so pull it and make it the tracked plane
             RaycastHit hitInfo;
-            Ray r = new Ray(currentFingerPos, Camera.main.transform.forward);
+            Vector3 rayDir = (currentFingerPos - Camera.main.transform.position).normalized;
+            Ray r = new Ray(currentFingerPos, rayDir);
             if(Physics.Raycast(r, out hitInfo))
             {
                 // if you've collided with an object, determine if it's a box
                 SyllableBox box;
                 bool boxEmpty;
+                SyllablePlane floatingPlane;
+
                 if(DetermineIfBox(hitInfo, out box, out boxEmpty))
                 {
                     // Grab the box and uncouple it, then start tracking the plane
                     if (!boxEmpty)
                     {
                         trackedPlane_m = Pull(box);
+                        trackedDistance_m = (trackedPlane_m.transform.position - Camera.main.transform.position).magnitude - 0.01f;
                     }
+                }
+                else if(DetermineIfFloatingPlane(hitInfo, out floatingPlane))
+                {
+                    trackedPlane_m = floatingPlane.gameObject;
+                    trackedDistance_m = (trackedPlane_m.transform.position - Camera.main.transform.position).magnitude - 0.01f;
                 }
             }
         }
 
         public void Hold(Vector2 fingerScreenSpace)
         {
-            Vector3 fingerWorldPos = Camera.main.ViewportToWorldPoint(new Vector3(fingerScreenSpace.x, fingerScreenSpace.y, Camera.main.nearClipPlane));
+            Vector3 fingerWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(fingerScreenSpace.x, fingerScreenSpace.y, Camera.main.nearClipPlane));
             Hold(fingerWorldPos);
         }
 
@@ -82,8 +95,10 @@ namespace SyllableShifter
             if (trackedPlane_m != null
                 && currentFingerPos != null)
             {
-                float distance = (trackedPlane_m.transform.position - Camera.main.transform.position).magnitude;
-                Vector3 newPos = currentFingerPos + Camera.main.transform.forward * distance;
+                //float distance = (trackedPlane_m.transform.position - Camera.main.transform.position).magnitude;
+                float distance = trackedDistance_m;
+                Vector3 dir = (currentFingerPos - Camera.main.transform.position).normalized;
+                Vector3 newPos = currentFingerPos + dir * distance;
                 trackedPlane_m.transform.position = newPos;
                 trackedPlane_m.transform.forward = -Camera.main.transform.forward;
 
@@ -111,7 +126,7 @@ namespace SyllableShifter
         private bool DetermineIfBox(RaycastHit hitInfo, out SyllableBox box, out bool boxEmpty)
         {
             GameObject obj = hitInfo.collider.gameObject;
-            var boxPointerScript = obj.GetComponent<SyllableBoxPointer>();
+            var boxPointerScript = obj.GetComponentInParent<SyllableBoxPointer>();
             if(obj != null
                 && boxPointerScript != null)
             {
@@ -137,10 +152,25 @@ namespace SyllableShifter
             return false;
         }
 
+        private bool DetermineIfFloatingPlane(RaycastHit hitInfo, out SyllablePlane plane)
+        {
+            GameObject obj = hitInfo.collider.gameObject;
+            var planeScript = obj.GetComponentInParent<SyllablePlane>();
+            if(obj != null
+                && planeScript != null)
+            {
+                plane = planeScript;
+                return true;
+            }
+
+            plane = null;
+            return false;
+        }
+
         private bool GetHoldHitInfo(GameObject planeGO, Vector3 currentFingerPos, out RaycastHit hitInfo)
         {
             Vector3 planeDir = (planeGO.transform.position - currentFingerPos).normalized;
-            Ray r = new Ray(planeGO.transform.position, planeDir); // Will this cause memory issues? or does it actually dispose like expected?
+            Ray r = new Ray(currentFingerPos, planeDir); // Will this cause memory issues? or does it actually dispose like expected?
             return Physics.Raycast(r, out hitInfo);
         }
 
@@ -150,9 +180,14 @@ namespace SyllableShifter
             {
                 var planeScript = planeGO.GetComponent<SyllablePlane>();
                 if (box != null
-                    && box.Syllable != null)
+                    && box.Syllable == null)
                 {
                     planeScript.CoupleTo(box);
+                    Syllable syllable = planeScript.Syllable;
+                    box.PushSyllable(syllable);
+
+                    // Set the plane's relative position
+                    planeGO.transform.localPosition = Vector3.zero;
                 }
             }
         }

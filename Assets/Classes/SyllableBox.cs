@@ -17,7 +17,7 @@ namespace SyllableShifter
         #region Static Methods
         public static string GetBoxName(string syllable = "")
         {
-            return syllable.Substring(0, 1).ToUpper() + syllable.Substring(1) + "Box";
+            return syllable.Substring(0, 1).ToUpper() + syllable.Substring(1) + "Box"; // (i.e. ProBox for procedure's first syllable pro)
         }
 
         //public static void CacheMesh()
@@ -45,6 +45,7 @@ namespace SyllableShifter
         public SyllableBox(Syllable syllable, GameObject parentVuforiaPlane)
         {
             vuforiaPlane_m = parentVuforiaPlane;
+            syllable_m = new Syllable(syllable);
             boxObj_m = initBox(syllable_m);
         }
 
@@ -84,6 +85,8 @@ namespace SyllableShifter
             if (vuforiaPlane_m != null)
             {
                 boxGO.transform.parent = vuforiaPlane_m.transform;
+                // Make visible
+                boxGO.SetActive(true);
             }
             else
             {
@@ -110,6 +113,22 @@ namespace SyllableShifter
             return Vector3.Dot(otherRight, vec) < 0;
         }
         #endregion
+
+        public void SetBoxColor(Color color)
+        {
+            // Set the material's color to be the one shown
+            var mr = boxObj_m.GetComponent<MeshRenderer>();
+
+            if (color != null)
+            {
+                mr.material.SetColor("_Color", color);
+            }
+            else
+            {
+                // Set it to black
+                mr.material.SetColor("_Color", Color.black);
+            }
+        }
 
         public void Dispose()
         {
@@ -145,6 +164,13 @@ namespace SyllableShifter
             get
             {
                 return boxObj_m;
+            }
+        }
+        public GameObject gameObject
+        {
+            get
+            {
+                return Box;
             }
         }
         public Transform transform

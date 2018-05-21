@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SyllableShifter
+namespace SyllableShifter.Scripts
 {
     public class TouchscreenManager : MonoBehaviour
     {
