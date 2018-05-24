@@ -115,7 +115,7 @@ namespace SyllableShifter
             boxGO.transform.localEulerAngles = new Vector3(270, boxGO.transform.localEulerAngles.y, boxGO.transform.localEulerAngles.z);
             // Rotate doesn't work like it should...adjust the position to correct for Rotate's shortcomings
             boxGO.transform.localPosition = Vector3.zero;
-            float distance = boxGO.GetComponent<MeshFilter>().mesh.bounds.extents.z * boxGO.transform.localScale.z; // Since the box is being corrected to halfway jut through the marker, just move it down half the box depth
+            float distance = boxGO.GetComponent<MeshFilter>().mesh.bounds.extents.z * boxGO.transform.localScale.z * 0.95f; // Since the box is being corrected to halfway jut through the marker, just move it down half the box depth
             //boxGO.transform.Translate(-boxGO.transform.forward * distance);
             boxGO.transform.localPosition += (-boxGO.transform.forward * distance);
         }

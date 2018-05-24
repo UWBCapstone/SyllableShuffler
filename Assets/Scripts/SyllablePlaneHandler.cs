@@ -189,6 +189,7 @@ namespace SyllableShifter
 
                     // Set the plane's relative position
                     planeGO.transform.localPosition = Vector3.zero;
+                    planeGO.transform.localEulerAngles = Vector3.zero;
                 }
             }
         }
