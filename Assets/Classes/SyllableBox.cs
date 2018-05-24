@@ -85,6 +85,13 @@ namespace SyllableShifter
             if (vuforiaPlane_m != null)
             {
                 boxGO.transform.parent = vuforiaPlane_m.transform;
+
+                // Adjust the scale to be 1 so it fits the plane instead of auto-adjusting to the 1m size that the prefab is at
+                adjustBoxScaleToMatchMarkerParent(boxGO);
+
+                // Rotate and translate the box appropriately so that its face almost matches with the image, not existing on top of the image as an AR marker
+                rotateAndTranslateBoxToARMarker(boxGO);
+
                 // Make visible
                 boxGO.SetActive(true);
             }
@@ -94,6 +101,23 @@ namespace SyllableShifter
             }
 
             return boxGO;
+        }
+
+        private void adjustBoxScaleToMatchMarkerParent(GameObject boxGO)
+        {
+            boxGO.transform.localScale = Vector3.one * 1.1f;
+        }
+
+        private void rotateAndTranslateBoxToARMarker(GameObject boxGO)
+        {
+            float angle = 270f;
+            //boxGO.transform.Rotate(boxGO.transform.right, angle);
+            boxGO.transform.localEulerAngles = new Vector3(270, boxGO.transform.localEulerAngles.y, boxGO.transform.localEulerAngles.z);
+            // Rotate doesn't work like it should...adjust the position to correct for Rotate's shortcomings
+            boxGO.transform.localPosition = Vector3.zero;
+            float distance = boxGO.GetComponent<MeshFilter>().mesh.bounds.extents.z * boxGO.transform.localScale.z; // Since the box is being corrected to halfway jut through the marker, just move it down half the box depth
+            //boxGO.transform.Translate(-boxGO.transform.forward * distance);
+            boxGO.transform.localPosition += (-boxGO.transform.forward * distance);
         }
 
         #region Positioning
