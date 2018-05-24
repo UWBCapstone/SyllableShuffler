@@ -10,6 +10,7 @@ namespace SyllableShifter
         private GameObject trackedPlane_m;
         private float trackedDistance_m = 0.0f;
         public SyllableBox BoxHoveredOver;
+        [HideInInspector]
         public bool CanDrop = false;
         #endregion
 
